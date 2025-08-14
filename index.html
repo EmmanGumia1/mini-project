@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Password Strength Checker</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 520px; margin: 40px auto; }
+    input { width: 100%; padding: 10px; font-size: 16px; }
+    .row { margin: 8px 0; }
+    .ok { color: #2e7d32; }
+    .no { color: #da3737; }
+    .meter { height: 10px; background: #829fea; border-radius: 6px; overflow: hidden; }
+    .bar { height: 100%; width: 0; transition: width .2s; }
+  </style>
+</head>
+<body>
+  <h1>Password Strength Checker</h1>
+  <div class="row"><input id="pwd" type="password" placeholder="Type a password…" autocomplete="new-password"></div>
+  <div class="row meter"><div id="bar" class="bar"></div></div>
+  <p><strong id="rating">Start typing…</strong></p>
+  <ul id="checks"></ul>
+
+  <script>
+    const specials = "!@#$%^&*()-_=+[]{};:'\",.<>/?`~\\|";
+    const pwd = document.getElementById('pwd');
+    const ratingEl = document.getElementById('rating');
+    const bar = document.getElementById('bar');
+    const checksEl = document.getElementById('checks');
+
+    function evaluate(s) {
+      const lengthOK = s.length >= 6;
+      const hasUpper = /[A-Z]/.test(s);
+      const hasLower = /[a-z]/.test(s);
+      const hasDigit = /[0-9]/.test(s);
+      const hasSpecial = new RegExp("[" + specials.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + "]").test(s);
+      const score = [lengthOK, hasUpper, hasLower, hasDigit, hasSpecial].filter(Boolean).length;
+
+      let rating = ["Very Weak","Very Weak","Weak","Moderate","Strong","Very Strong"][score];
+      return { rating, score, details: { "Length ≥ 8": lengthOK, Uppercase: hasUpper, Lowercase: hasLower, Digit: hasDigit, Special: hasSpecial } };
+    }
+
+    function render(result) {
+      ratingEl.textContent = "Password Strength: " + result.rating;
+      bar.style.width = (result.score * 20) + "%";
+      bar.style.background = ["#d32f2f","#e53935","#fb8c00","#fdd835","#43a047","#2e7d32"][result.score];
+      checksEl.innerHTML = "";
+      Object.entries(result.details).forEach(([k,v]) => {
+        const li = document.createElement('li');
+        li.textContent = `${k}: ${v ? "✔️" : "❌"}`;
+        li.className = v ? "ok" : "no";
+        checksEl.appendChild(li);
+      });
+    }
+
+    pwd.addEventListener('input', () => render(evaluate(pwd.value)));
+    render(evaluate(""));
+  </script>
+</body>
+</html>
